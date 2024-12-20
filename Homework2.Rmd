@@ -21,19 +21,23 @@ library(readxl)  # For Excel imports
 # Exploring the weather dataset
 glimpse(weather)
 
-# Filter for temperatures below 10°C at Newark (EWR)
-low_temp_days <- weather %>%
+# Single pipeline solution for Task 1
+low_temp_count <- weather %>%
   filter(temp < 10, origin == "EWR") %>%
-  mutate(date = as.Date(time_hour)) %>%
-  group_by(date) %>%
-  summarise(avg_temp = mean(temp, na.rm = TRUE), .groups = "drop")
-
-# Count the number of such days per month
-low_temp_count <- low_temp_days %>%
-  mutate(month = lubridate::month(date, label = TRUE)) %>%
-  count(month, name = "days_below_10")
+  mutate(date = as.Date(time_hour), month = lubridate::month(date, label = TRUE)) %>%
+  group_by(month) %>%
+  summarise(days_below_10 = n(), .groups = "drop")
 
 # Display the result
 low_temp_count
+
+# Additional checks to make sure that the result is correctly 0
+# Check if EWR does exist in the weather dataset 
+unique(weather$origin)
+
+# Check if filtering has worked corretly
+weather %>%
+  filter(temp < 10, origin == "EWR") %>%
+  glimpse()
 ```
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf, EMPR_08a_EDA_AS2024.pdf)*
