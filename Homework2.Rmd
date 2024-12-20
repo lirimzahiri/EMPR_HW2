@@ -1,0 +1,17 @@
+---
+title: "Homework 2 - Exploratory Data Analysis"
+author: "Mouad Medini & Lirim Zahiri"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    number_sections: true
+    toc: true
+---
+
+```{r setup, include=FALSE}
+# Initial Setup
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)  # Main library for data analysis
+library(nycflights13)  # Dataset for tasks 1-3
+library(readxl)  # For Excel imports
+```
