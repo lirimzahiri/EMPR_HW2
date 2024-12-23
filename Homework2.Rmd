@@ -35,7 +35,7 @@ low_temp_count
 # Check if EWR does exist in the weather dataset 
 unique(weather$origin)
 
-# Check if filtering has worked corretly
+# Check if filtering has worked correctly
 weather %>%
   filter(temp < 10, origin == "EWR") %>%
   glimpse()
