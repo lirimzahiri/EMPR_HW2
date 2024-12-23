@@ -41,3 +41,14 @@ weather %>%
   glimpse()
 ```
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf, EMPR_08a_EDA_AS2024.pdf)*
+
+# Task 2: Analyze flights missing `dep_time`
+```{r task2}
+# Flights with missing `dep_time`
+missing_dep_time <- flights %>%
+  filter(is.na(dep_time)) %>%
+  summarise(across(everything(), ~ sum(is.na(.))))
+ 
+missing_dep_time
+```
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf)*
