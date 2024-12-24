@@ -1,0 +1,6 @@
+"0","# Flights with missing `dep_time`"
+"0","missing_dep_time <- flights %>%"
+"0","  filter(is.na(dep_time)) %>%"
+"0","  summarise(across(everything(), ~ sum(is.na(.))))"
+"0"," "
+"0","missing_dep_time"

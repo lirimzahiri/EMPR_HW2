@@ -1,0 +1,40 @@
+"0",""
+"0","# Additional checks to make sure that the result is correctly 0"
+"0","# Check if EWR does exist in the weather dataset "
+"0","unique(weather$origin)"
+"1","[1]"
+"1"," ""EWR"""
+"1"," ""JFK"""
+"1"," ""LGA"""
+"1","
+"
+"0","# Check if filtering has worked correctly"
+"0","weather %>%"
+"0","  filter(temp < 10, origin == ""EWR"") %>%"
+"0","  glimpse()"
+"1","Rows: 0"
+"1",""
+"1","
+"
+"1","Columns: 15"
+"1",""
+"1","
+"
+"1","$ origin     [3m[38;5;246m<chr>[39m[23m 
+$ year       [3m[38;5;246m<int>[39m[23m 
+$ month      [3m[38;5;246m<int>[39m[23m 
+$ day        [3m[38;5;246m<int>[39m[23m 
+$ hour       [3m[38;5;246m<int>[39m[23m 
+$ temp       [3m[38;5;246m<dbl>[39m[23m 
+$ dewp       [3m[38;5;246m<dbl>[39m[23m 
+$ humid      [3m[38;5;246m<dbl>[39m[23m 
+$ wind_dir   [3m[38;5;246m<dbl>[39m[23m 
+$ wind_speed [3m[38;5;246m<dbl>[39m[23m 
+$ wind_gust  [3m[38;5;246m<dbl>[39m[23m 
+$ precip     [3m[38;5;246m<dbl>[39m[23m 
+$ pressure   [3m[38;5;246m<dbl>[39m[23m 
+$ visib      [3m[38;5;246m<dbl>[39m[23m 
+$ time_hour  [3m[38;5;246m<dttm>[39m[23m "
+"1",""
+"1","
+"
