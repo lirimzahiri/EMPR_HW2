@@ -1,0 +1,402 @@
+---
+title: "Homework 2 - Exploratory Data Analysis"
+author: "Mouad Medini & Lirim Zahiri"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Preparation
+
+```{r setup, include=FALSE}
+# Initial Setup: Suppress output from code setup chunk
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load necessary libraries for data analysis and visualization
+library(tidyverse)  # Main library for data manipulation and analysis (includes ggplot2, dplyr, tidyr, etc.)
+library(ggridges)   # Extension for ggplot2 to create ridge plots
+library(janitor)    # For data cleaning and adding utility functions like "clean_names()"
+library(nycflights13)  # Dataset package for practicing data manipulation and analysis
+library(readxl)  # For importing Excel files into R
+```
+
+These packages collectively reflect the core skills and tools introduced in school lessons, focusing on data preparation, analysis, visualization, and report generation.
+
+# Task 1: Days with temperatures below 10°C at Newark Airport
+
+## Objective
+
+Determine the number of days with temperatures below 10°C at Newark Airport (EWR), grouped by month, and compare the results to expected seasonal trends.
+
+```{r task1}
+# Exploring the weather dataset
+glimpse(weather)
+?weather
+
+# Filter and count for temperatures below 10°C (10° in Fahrenheit = 50) at Newark (EWR)
+weather |>
+  filter(origin == "EWR", temp < 50) |>
+  group_by(month, date = as.Date(time_hour)) |>
+  summarize(days_below_10 = n(), .groups = "drop") |>
+  count(month, name = "days_below_10")
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf, EMPR_08a_EDA_AS2024.pdf)*
+
+## Conclusion
+
+The analysis shows that January, February, and March have the highest number of days with temperatures below 10°C, which aligns well with expectations for the winter months. As spring approaches, April and May show a noticeable decline in cold days. Interestingly, some colder days were recorded in October and November, likely due to seasonal variability. September had very few cold days, aligning with its position as a transitional month between summer and autumn.
+
+While the results generally match expectations for Newark's weather patterns, there are small deviations. For instance, September, typically considered a summer month, surprisingly recorded a few colder days.
+
+Overall, these findings suggest that winter in Newark tends to last longer than in Switzerland, indicating a notable difference in seasonal patterns between the two regions.
+
+# Task 2: Analyze flights missing `dep_time`
+
+## Objective
+
+Determine the flights in January with missing `dep_time` and identify other variables these flights are also missing. Finally, interpret what these rows might represent.
+
+```{r task2}
+# Flights with missing `dep_time` in january
+flights |>
+  filter(month == 1, is.na(dep_time))
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf)*
+
+## Results
+
+The flights with missing `dep_time` in January are also missing the following variables: - `dep_delay` - `arr_time` - `arr_delay` - `air_time`
+
+These variables are typically associated with flight operations, indicating that these flights have incomplete data for both departure and arrival details.
+
+## Conclusion
+
+The rows with missing `dep_time` most likely represent **canceled flights**. This is supported by: 1. The absence of a departure time, suggesting the flight never left the airport. 2. Missing values for related variables such as `dep_delay`, `arr_time`, and `arr_delay`, which would only exist for flights that operated.
+
+This conclusion aligns with the expected behavior of canceled flights, where operational data is not recorded.
+
+# Task 3: Visualizing temperatures
+
+## Objective
+
+The goal of this task is to analyze and visualize temperature data from the `nycflights13::weather` dataset by: 1. Displaying the distribution of temperatures for each month using faceted histograms. 2. Creating a ridge plot to visualize smooth density distributions of temperatures across months. 3. Aggregating monthly temperature data to calculate averages and their standard deviations, then plotting these averages with 99% confidence intervals.
+
+This analysis aims to provide insights into monthly temperature patterns and variations throughout the year.
+
+```{r task3}
+# Select all variables except those between year and hour
+# Add the month column from time_hour
+weather_filtered <- weather |>
+  select(-(year:hour)) |>
+  mutate(month = month(time_hour))
+
+# Visualization a
+weather_filtered |>
+  mutate(month = factor(month, labels = month.name)) |> # Convert month numbers to full names
+  ggplot(aes(x = temp)) +
+  geom_histogram(binwidth = 5, fill = "steelblue", color = "white") +
+  facet_wrap(~ month, ncol = 3) +
+  labs(title = "Temperature Distribution by Month", x = "Temperature (°F)", y = "Count") +
+  theme_minimal()
+
+# Ridge plot
+weather_filtered |>
+  mutate(month = factor(month, labels = month.name)) |> # Convert month numbers to full names
+  ggplot(aes(x = temp, y = month)) +
+  geom_density_ridges(scale = 0.9, fill = "skyblue", alpha = 0.7) + # Ridge plot
+  labs(
+    title = "Temperature Distribution by Month (Ridge Plot)",
+    x = "Temperature (°F)",
+    y = "Month"
+  ) +
+  theme_minimal()
+
+# Aggregate data with weather_filtered
+agg_data <- weather_filtered |>
+  group_by(month) |>
+  summarize(
+    avg_temp = mean(temp, na.rm = TRUE),
+    sd_temp = sd(temp, na.rm = TRUE),
+    n = n()
+  )
+
+# Plot with explicit confidence interval calculation during visualization
+ggplot(agg_data, aes(x = month, y = avg_temp)) +
+  geom_line(size = 1, color = "blue") +                              # Line for average temperature
+  geom_ribbon(
+    aes(
+      ymin = avg_temp - 3 * (sd_temp / sqrt(n)),                     # Lower 99% CI
+      ymax = avg_temp + 3 * (sd_temp / sqrt(n))                      # Upper 99% CI
+    ),
+    fill = "lightblue", alpha = 0.4
+  ) +
+  scale_x_continuous(breaks = 1:12, labels = 1:12) +                 # Numeric month labels
+  labs(
+    title = "Monthly Average Temperature with 99% Confidence Intervals",
+    x = "Month (Number)", y = "Average Temperature (°F)"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024.pdf, EMPR_07_Data_Tidying_AS2024,EMPR_05_Data_Transformation_I_AS2024, EMPR_08a_EDA_AS2024.pdf)*
+
+# Task 3: Visualizing Temperatures
+
+## Results
+
+### a) Distribution of Temperature by Month
+
+The histogram plot shows the distribution of temperatures for each month, with months labeled using their full names. This visualization highlights the range and frequency of temperatures across different months. Colder months (e.g., January, February) display temperatures clustered at lower ranges, while summer months (e.g., July, August) show higher temperature clusters.
+
+### b) Ridge Plot of Temperature by Month
+
+The ridge plot provides a smooth, layered representation of temperature distributions across months. It clearly demonstrates the progression of temperature ranges from winter to summer and back to winter. The smooth density lines make it easier to compare temperature distributions across months.
+
+### c) Monthly Average Temperature with 99% Confidence Intervals
+
+The line plot with ribbon visualization shows the average temperature for each month, along with 99% confidence intervals (calculated as ±3 × (s / √n)). This plot reveals: - Lower average temperatures in winter months (January, February, December). - Gradual increases during spring and peak temperatures in summer (July, August). - A return to lower temperatures in autumn and winter.
+
+## Conclusion
+
+These visualizations provide a comprehensive overview of temperature trends in the dataset: 1. Winter months show lower temperatures, as expected, with narrower ranges in January and February. 2. Summer months exhibit higher average temperatures, with July and August peaking as the warmest months. 3. Confidence intervals are narrowest for months with more consistent temperatures, while months with greater variability (e.g., transitional months like March and October) have wider intervals.
+
+This analysis aligns with expected seasonal patterns and demonstrates the value of combining multiple visualization techniques to analyze temperature trends effectively.
+
+# Task 4: Data cleaning from `Data_HW2.xlsx`
+
+## Objective
+
+The goal is to import the dataset from the sheet **"A very small sample"** in `Data_HW2.xlsx`, inspect it for issues, clean the data, and save it as a `.rds` file for further analysis. This task ensures consistency and usability of the dataset.
+
+## Issues Identified and Solutions
+
+1.  **Column Names**
+    -   **Problem**: Column names are inconsistent, with spaces or special characters (e.g., `date of birth`, `cash (CHF)`).
+    -   **Solution**: Used `clean_names()` to standardize column names to a consistent snake_case format.
+2.  **Class and Gender**
+    -   **Problem**: The `class` and `gender` columns are not stored as factors, which would be appropriate for categorical data.
+    -   **Solution**: Converted these columns to factors using `factor()`.
+3.  **Date of Birth**
+    -   **Problem**: Dates are stored in multiple formats, including standard `YYYY-MM-DD` and Excel serial numbers.
+    -   **Solution**: Applied conditional parsing to handle standard formats and convert Excel serial numbers to proper dates.
+4.  **Height**
+    -   **Problem**: Heights are inconsistently represented in centimeters (e.g., `178cm`) and meters (e.g., `1,82m`).
+    -   **Solution**: Parsed numeric values and converted meters to centimeters for uniformity.
+5.  **Hair Length**
+    -   **Problem**: The value "Glatze" (German for "bald") is non-numeric.
+    -   **Solution**: Replaced "Glatze" with `0` and converted all values to numeric.
+6.  **Eye Colour**
+    -   **Problem**: Eye color is inconsistent, with mixed languages (e.g., "Braun", "Brown") and separators (e.g., `/`, spaces).
+    -   **Solution**: Standardized terms to English, replaced `/` with a space, and removed extra spaces.
+7.  **Cash (CHF)**
+    -   **Problem**: Numerical values are clean but required conversion to a consistent numeric format.
+    -   **Solution**: Ensured values are properly parsed as numeric.
+8.  **Other Issues**
+    -   Postcode and transport values were clean and required no transformation.
+
+```{r task4}
+# Import and cleaning the dataset
+# Referenced from slides: EMPR_06_Import_Export_AS2024.pdf
+data <- read_excel("Data_HW2.xlsx", sheet = "A very small sample")
+
+data |> glimpse() |>
+  summary()
+
+data_clean <- data |> 
+  clean_names() |> 
+  mutate(
+    # Convert class and gender to factors
+    class = factor(class),
+    gender = factor(gender),
+    
+    # Correct date_of_birth: Handle standard dates and Excel serial numbers
+    date_of_birth = case_when(
+      str_detect(date_of_birth, "^\\d{4}-\\d{2}-\\d{2}$") ~ as.Date(date_of_birth),  # Standard YYYY-MM-DD
+      str_detect(date_of_birth, "^\\d+$") ~ as.Date(as.numeric(date_of_birth), origin = "1899-12-30"),  # Excel serial
+      TRUE ~ NA_Date_  # Assign NA if unparseable
+    ),
+    
+    # Correct height: Use parse_number to extract numeric values and handle cm/m conversion
+    height = case_when(
+      str_detect(height, "m") ~ parse_number(height) * 100,  # Convert "1,82m" to 182
+      TRUE ~ parse_number(height)  # Parse "cm" values directly
+    ) / 100,  # Fix incorrect scaling
+    
+    # Handle hair: Replace "Glatze" with "0" and convert to numeric
+    hair = parse_number(if_else(hair == "Glatze", "0", hair)),
+    
+    # Standardize eye_colour, keeping combinations but removing "/"
+    eye_colour = str_replace_all(
+      eye_colour,
+      regex("braun|brown", ignore_case = TRUE), "brown"
+    ) |> str_replace_all(
+      regex("blau|blue", ignore_case = TRUE), "blue"
+    ) |> str_replace_all(
+      regex("grün|green", ignore_case = TRUE), "green"
+    ) |> str_replace_all(
+      regex("grau|grey|gray", ignore_case = TRUE), "grey"
+    ) |> str_replace_all(
+      regex("schwarz|black", ignore_case = TRUE), "black"
+    ) |> str_replace_all(
+      "/", " "  # Replace "/" with a space
+    ) |> str_squish()  # Remove extra spaces
+  ) |> 
+  glimpse()
+
+# Step 4: Save the cleaned data
+write_rds(data_clean, "data_clean.rds")
+
+# Step 5: Verify cleaned data
+glimpse(data_clean)
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024)*
+
+## Cleaned Data
+
+The cleaned dataset resolves inconsistencies and prepares the data for analysis. Notable transformations include: - Uniform column names (e.g., `date_of_birth`, `cash_chf`). - Consistent formats for height and date of birth. - Standardized eye color values (e.g., "blue", "green"). - Conversion of `class` and `gender` to factors for proper categorical analysis.
+
+## Conclusion
+
+The cleaned data ensures usability and accuracy, addressing all inconsistencies in the original dataset. The cleaned dataset is saved as `data_clean.rds` for use in future analyses.
+
+# Task 5: Anscombe's Dataset
+
+## Part (a): Transform the Dataset into Tidy Format
+
+### Objective
+
+The goal is to transform Anscombe's dataset into a tidy format with exactly three variables: `sample`, `x`, and `y`. The dataset will then be saved for future use.
+
+### Issues and Solution
+
+1.  **Issue**: The dataset has eight columns (`x1` to `x4`, `y1` to `y4`) instead of grouping all observations into three variables: `sample`, `x`, and `y`.
+2.  **Solution**: Use `pivot_longer()` to:
+    -   Gather all `x` and `y` values into a single column for each.
+    -   Extract the sample number from the column names and store it in a new variable `sample`.
+
+```{r part_a}
+# Transform Anscombe's dataset into tidy format
+
+anscombe |> glimpse()
+
+tidy_anscombe <- anscombe |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c(".value", "sample"),
+    names_pattern = "(.)(.)"
+  ) |>
+  glimpse()
+
+# Save the tidy dataset for future use
+saveRDS(tidy_anscombe, file = "tidy_anscombe.rds")
+```
+
+*(Slides used: EMPR_07_Data_Tidying_AS2024)*
+
+### Conclusion
+
+The dataset was transformed into a tidy format with three variables: `sample`, `x`, and `y`. This ensures the data is consistent, easier to analyze, and adheres to tidy data principles. The tidy dataset was saved as `tidy_anscombe.rds` for further use.
+
+## Part (b): Scatterplot with Best Fit Lines
+
+### Objective
+
+The objective is to create a scatterplot using the tidy Anscombe dataset, where:
+- Each sample is distinguished by color and shape.
+- Best-fit lines for `y` on `x` are included to visualize linear trends.
+- Shapes are restricted to specific values (12, 10, 9, and 7) for clarity and distinction.
+This demonstrates the value of visualizing data to reveal underlying patterns not evident in summary statistics.
+
+
+```{r part_b}
+# Load the tidy dataset
+tidy_anscombe <- readRDS("tidy_anscombe.rds")
+
+# Scatterplot with best fit lines
+ggplot(tidy_anscombe, aes(x = x, y = y, color = sample, shape = sample)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_shape_manual(values = c(12, 10, 9, 7)) +
+  labs(
+    title = "Anscombe's Datasets: Scatterplot with Best Fit Lines",
+    x = "x",
+    y = "y",
+    color = "Sample",
+    shape = "Sample"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024)*
+
+
+## Part (c): Summarize the Tidy Dataset
+
+### Objective
+
+The objective is to summarize the tidy Anscombe dataset by calculating the means, standard deviations, and correlation coefficients for `x` and `y` grouped by sample. The results are presented in a well-formatted table using `kableExtra::kable()`.
+
+```{r part_c}
+# Summarize the tidy dataset and display using kableExtra in a single pipeline
+tidy_anscombe |>
+  group_by(sample) |>
+  summarise(
+    mean_x = mean(x),
+    mean_y = mean(y),
+    sd_x = sd(x),
+    sd_y = sd(y),
+    corr_xy = cor(x, y)
+  ) |>
+  kableExtra::kable(
+    caption = "Summary of Anscombe's Dataset",
+    col.names = c("Sample", "Mean x", "Mean y", "SD x", "SD y", "Correlation"),
+    digits = 3
+  )
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024, EMPR_03_Visualization1_AS2024)*
+
+## Part (d): Facet Grid Scatterplots
+
+### Objective
+
+The objective is to create a set of scatterplots for each sample in Anscombe's dataset using `facet_grid()`. Each scatterplot includes:
+- Points distinguished by color and shape for each sample.
+- Lines of best fit to show linear trends.
+This visualization aims to highlight the differences between the samples despite identical summary statistics.
+
+
+```{r part_d}
+# Scatterplots with facet grid per sample
+ggplot(tidy_anscombe, aes(x = x, y = y)) +
+  geom_point(aes(color = sample, shape = sample), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  facet_grid(. ~ sample) +
+  scale_shape_manual(values = c(12, 10, 9, 7)) +
+  labs(
+    title = "Anscombe's Datasets: Facet Grid Scatterplots",
+    x = "x",
+    y = "y",
+    color = "Sample",
+    shape = "Sample"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024)*
+
+## Conclusion
+
+The facet grid scatterplots clearly show that all four samples, despite having identical statistical properties, exhibit distinct data structures and patterns. This underscores Anscombe's message: **numerical summaries alone can be misleading, and visualizations are essential to uncover meaningful insights**.
+
+# Collaboration Description
+
+This project was completed in collaboration between Mouad Medini and Lirim Zahiri. **Task Division:**
+
+- Data Cleaning: Mouad Medini
+
+- Visualization: Lirim Zahiri
+
+- Documentation: Both collaboratively

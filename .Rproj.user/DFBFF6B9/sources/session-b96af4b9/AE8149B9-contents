@@ -1,0 +1,109 @@
+---
+title: "Homework 2 - Exploratory Data Analysis"
+author: "Mouad Medini & Lirim Zahiri"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    number_sections: true
+    toc: true
+---
+
+# Preparation
+
+```{r setup, include=FALSE}
+# Initial Setup: Suppress output from code setup chunk
+knitr::opts_chunk$set(echo = TRUE)
+
+# Load necessary libraries for data analysis and visualization
+library(tidyverse)  # Main library for data manipulation and analysis (includes ggplot2, dplyr, tidyr, etc.)
+library(ggridges)   # Extension for ggplot2 to create ridge plots
+library(janitor)    # For data cleaning and adding utility functions like "clean_names()"
+library(nycflights13)  # Dataset package for practicing data manipulation and analysis
+library(readxl)  # For importing Excel files into R
+```
+
+# Task 1: Days with temperatures below 10°C at Newark Airport
+
+```{r task1}
+# Exploring the weather dataset
+glimpse(weather)
+?weather
+
+# Filter and count for temperatures below 10°C (10° in Fahrenheit = 50) at Newark (EWR)
+weather |>
+  filter(origin == "EWR", temp < 50) |>
+  group_by(month, date = as.Date(time_hour)) |>
+  summarize(days_below_10 = n(), .groups = "drop") |>
+  count(month, name = "days_below_10")
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf, EMPR_08a_EDA_AS2024.pdf)*
+
+# Task 2: Analyze flights missing `dep_time`
+
+```{r task2}
+# Flights with missing `dep_time` in january
+flights |>
+  filter(month == 1, is.na(dep_time))
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf)*
+
+# Task 3: Visualizing temperatures
+
+```{r task3}
+# Select all variables except those between year and hour
+# Add the month column from time_hour
+weather_filtered <- weather |>
+  select(-(year:hour)) |>
+  mutate(month = month(time_hour))
+
+# Visualization a
+weather_filtered |>
+  mutate(month = factor(month, labels = month.name)) |> # Convert month numbers to full names
+  ggplot(aes(x = temp)) +
+  geom_histogram(binwidth = 5, fill = "steelblue", color = "white") +
+  facet_wrap(~ month, ncol = 3) +
+  labs(title = "Temperature Distribution by Month", x = "Temperature (°F)", y = "Count") +
+  theme_minimal()
+
+# Ridge plot
+weather_filtered |>
+  mutate(month = factor(month, labels = month.name)) |> # Convert month numbers to full names
+  ggplot(aes(x = temp, y = month)) +
+  geom_density_ridges(scale = 0.9, fill = "skyblue", alpha = 0.7) + # Ridge plot
+  labs(
+    title = "Temperature Distribution by Month (Ridge Plot)",
+    x = "Temperature (°F)",
+    y = "Month"
+  ) +
+  theme_minimal()
+
+# Aggregate data with weather_filtered
+agg_data <- weather_filtered |>
+  group_by(month) |>
+  summarize(
+    avg_temp = mean(temp, na.rm = TRUE),
+    sd_temp = sd(temp, na.rm = TRUE),
+    n = n()
+  )
+
+# Plot with explicit confidence interval calculation during visualization
+ggplot(agg_data, aes(x = month, y = avg_temp)) +
+  geom_line(size = 1, color = "blue") +                              # Line for average temperature
+  geom_ribbon(
+    aes(
+      ymin = avg_temp - 3 * (sd_temp / sqrt(n)),                     # Lower 99% CI
+      ymax = avg_temp + 3 * (sd_temp / sqrt(n))                      # Upper 99% CI
+    ),
+    fill = "lightblue", alpha = 0.4
+  ) +
+  scale_x_continuous(breaks = 1:12, labels = 1:12) +                 # Numeric month labels
+  labs(
+    title = "Monthly Average Temperature with 99% Confidence Intervals",
+    x = "Month (Number)", y = "Average Temperature (°F)"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024.pdf, EMPR_07_Data_Tidying_AS2024,EMPR_05_Data_Transformation_I_AS2024, EMPR_08a_EDA_AS2024.pdf)*
