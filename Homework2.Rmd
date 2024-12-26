@@ -8,9 +8,11 @@ output:
     toc: true
 ---
 
-# Preparation
+
 
 ```{r setup, include=FALSE}
+# Preparation
+
 # Initial Setup: Suppress output from code setup chunk
 knitr::opts_chunk$set(echo = TRUE)
 
