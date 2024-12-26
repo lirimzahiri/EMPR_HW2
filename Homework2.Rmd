@@ -107,3 +107,64 @@ ggplot(agg_data, aes(x = month, y = avg_temp)) +
 ```
 
 *(Slides used: EMPR_03_Visualization1_AS2024.pdf, EMPR_07_Data_Tidying_AS2024,EMPR_05_Data_Transformation_I_AS2024, EMPR_08a_EDA_AS2024.pdf)*
+
+# Task 4: Data cleaning from `Data_HW2.xlsx`
+
+```{r task4}
+# Import and cleaning the dataset
+# Referenced from slides: EMPR_06_Import_Export_AS2024.pdf
+data <- read_excel("Data_HW2.xlsx", sheet = "A very small sample")
+
+data |> glimpse() |>
+  summary()
+
+data_clean <- data |> 
+  clean_names() |> 
+  mutate(
+    # Convert class and gender to factors
+    class = factor(class),
+    gender = factor(gender),
+    
+    # Correct date_of_birth: Handle standard dates and Excel serial numbers
+    date_of_birth = case_when(
+      str_detect(date_of_birth, "^\\d{4}-\\d{2}-\\d{2}$") ~ as.Date(date_of_birth),  # Standard YYYY-MM-DD
+      str_detect(date_of_birth, "^\\d+$") ~ as.Date(as.numeric(date_of_birth), origin = "1899-12-30"),  # Excel serial
+      TRUE ~ NA_Date_  # Assign NA if unparseable
+    ),
+    
+    # Correct height: Use parse_number to extract numeric values and handle cm/m conversion
+    height = case_when(
+      str_detect(height, "m") ~ parse_number(height) * 100,  # Convert "1,82m" to 182
+      TRUE ~ parse_number(height)  # Parse "cm" values directly
+    ) / 100,  # Fix incorrect scaling
+    
+    # Handle hair: Replace "Glatze" with "0" and convert to numeric
+    hair = parse_number(if_else(hair == "Glatze", "0", hair)),
+    
+    # Standardize eye_colour, keeping combinations but removing "/"
+    eye_colour = str_replace_all(
+      eye_colour,
+      regex("braun|brown", ignore_case = TRUE), "brown"
+    ) |> str_replace_all(
+      regex("blau|blue", ignore_case = TRUE), "blue"
+    ) |> str_replace_all(
+      regex("grün|green", ignore_case = TRUE), "green"
+    ) |> str_replace_all(
+      regex("grau|grey|gray", ignore_case = TRUE), "grey"
+    ) |> str_replace_all(
+      regex("schwarz|black", ignore_case = TRUE), "black"
+    ) |> str_replace_all(
+      "/", " "  # Replace "/" with a space
+    ) |> str_squish()  # Remove extra spaces
+  ) |> 
+  glimpse()
+
+# Step 4: Save the cleaned data
+write_rds(data_clean, "data_clean.rds")
+
+# Step 5: Verify cleaned data
+glimpse(data_clean)
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024)*
+
