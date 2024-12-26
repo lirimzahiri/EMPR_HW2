@@ -3,7 +3,7 @@
     "path": "~/GitHub/EMPR_HW2/Homework2.Rmd",
     "project_path": "Homework2.Rmd",
     "type": "r_markdown",
-    "hash": "167649304",
+    "hash": "2927830925",
     "contents": "",
     "dirty": false,
     "created": 1734915540702.0,
@@ -13,8 +13,8 @@
         "source_window_id": "",
         "Source": "Source",
         "last_setup_crc32": "",
-        "cursorPosition": "170,0",
-        "scrollLine": "138",
+        "cursorPosition": "259,0",
+        "scrollLine": "227",
         "rmdVisualMode": "false",
         "rmdVisualWrapConfigured": "true",
         "docOutlineVisible": "1",
@@ -22,11 +22,11 @@
         "rmdVisualCollapsedChunks": ""
     },
     "folds": "",
-    "lastKnownWriteTime": 1735238160,
+    "lastKnownWriteTime": 1735238554,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1735238160544,
+    "last_content_update": 1735238554778,
     "read_only": false,
     "read_only_alternatives": []
 }

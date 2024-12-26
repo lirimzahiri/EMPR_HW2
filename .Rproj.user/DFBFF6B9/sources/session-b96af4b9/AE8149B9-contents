@@ -168,3 +168,92 @@ glimpse(data_clean)
 
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024)*
 
+# Task 5: Anscombe's Dataset
+
+## Part (a): Transform the Dataset into Tidy Format
+
+```{r task5_part_a}
+# Transform Anscombe's dataset into tidy format
+
+anscombe |> glimpse()
+
+tidy_anscombe <- anscombe |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c(".value", "sample"),
+    names_pattern = "(.)(.)"
+  ) |>
+  glimpse()
+
+# Save the tidy dataset for future use
+saveRDS(tidy_anscombe, file = "tidy_anscombe.rds")
+```
+
+*(Slides used: EMPR_07_Data_Tidying_AS2024)*
+
+## Part (b): Scatterplot with Best Fit Lines
+
+```{r task5_part_b}
+# Load the tidy dataset
+tidy_anscombe <- readRDS("tidy_anscombe.rds")
+
+# Scatterplot with best fit lines
+ggplot(tidy_anscombe, aes(x = x, y = y, color = sample, shape = sample)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_shape_manual(values = c(12, 10, 9, 7)) +
+  labs(
+    title = "Anscombe's Datasets: Scatterplot with Best Fit Lines",
+    x = "x",
+    y = "y",
+    color = "Sample",
+    shape = "Sample"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024)*
+
+## Part (c): Summarize the Tidy Dataset
+
+```{r task5_part_c}
+# Summarize the tidy dataset and display using kableExtra in a single pipeline
+tidy_anscombe |>
+  group_by(sample) |>
+  summarise(
+    mean_x = mean(x),
+    mean_y = mean(y),
+    sd_x = sd(x),
+    sd_y = sd(y),
+    corr_xy = cor(x, y)
+  ) |>
+  kableExtra::kable(
+    caption = "Summary of Anscombe's Dataset",
+    col.names = c("Sample", "Mean x", "Mean y", "SD x", "SD y", "Correlation"),
+    digits = 3
+  )
+```
+
+*(Slides used: EMPR_05_Data_Transformation_I_AS2024, EMPR_03_Visualization1_AS2024)*
+
+## Part (d): Facet Grid Scatterplots
+
+```{r task5_part_d}
+# Scatterplots with facet grid per sample
+ggplot(tidy_anscombe, aes(x = x, y = y)) +
+  geom_point(aes(color = sample, shape = sample), size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  facet_grid(. ~ sample) +
+  scale_shape_manual(values = c(12, 10, 9, 7)) +
+  labs(
+    title = "Anscombe's Datasets: Facet Grid Scatterplots",
+    x = "x",
+    y = "y",
+    color = "Sample",
+    shape = "Sample"
+  ) +
+  theme_minimal()
+```
+
+*(Slides used: EMPR_03_Visualization1_AS2024)*
+
