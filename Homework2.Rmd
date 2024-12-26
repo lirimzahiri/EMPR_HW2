@@ -9,12 +9,13 @@ output:
 ---
 
 
-
 ```{r setup, include=FALSE}
 # Preparation
 
 # Initial Setup: Suppress output from code setup chunk
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE) 
+knitr::opts_chunk$set(fig.width = 7, fig.height = 4)
+
 
 # Load necessary libraries for data analysis and visualization
 library(tidyverse)  # Main library for data manipulation and analysis (includes ggplot2, dplyr, tidyr, etc.)
@@ -24,7 +25,15 @@ library(nycflights13)  # Dataset package for practicing data manipulation and an
 library(readxl)  # For importing Excel files into R
 ```
 
+**Disclaimer: All code chunks were excluded from the PDF due to page limitation reasons.**
+
+**For Code please refer to the .rmd file**
+
 # Task 1: Days with temperatures below 10°C at Newark Airport
+
+## Objective
+
+Determine the number of days with temperatures below 10°C at Newark Airport (EWR), grouped by month, and compare the results to expected seasonal trends.
 
 ```{r task1}
 # Exploring the weather dataset
@@ -41,7 +50,19 @@ weather |>
 
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf, EMPR_08a_EDA_AS2024.pdf)*
 
+## Conclusion
+
+The analysis shows that January, February, and March have the highest number of days with temperatures below 10°C, which aligns well with expectations for the winter months. As spring approaches, April and May show a noticeable decline in cold days. Interestingly, some colder days were recorded in October and November, likely due to seasonal variability. September had very few cold days, aligning with its position as a transitional month between summer and autumn.
+
+While the results generally match expectations for Newark's weather patterns, there are small deviations. For instance, September, typically considered a summer month, surprisingly recorded a few colder days.
+
+Overall, these findings suggest that winter in Newark tends to last longer than in Switzerland, indicating a notable difference in seasonal patterns between the two regions.
+
 # Task 2: Analyze flights missing `dep_time`
+
+## Objective
+
+Determine the flights in January with missing `dep_time` and identify other variables these flights are also missing. Finally, interpret what these rows might represent.
 
 ```{r task2}
 # Flights with missing `dep_time` in january
@@ -51,7 +72,19 @@ flights |>
 
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024.pdf)*
 
+## Results
+
+The flights with missing `dep_time` in January are also missing data typically associated with flight operation: - `dep_delay` - `arr_time` - `arr_delay` - `air_time`
+
+The rows with missing `dep_time` most likely represent **canceled flights**. This is supported by: 1. The absence of a departure time, suggesting the flight never left the airport. 2. Missing values for related variables such as `dep_delay`, `arr_time`, and `arr_delay`, which would only exist for flights that operated.
+
+This conclusion aligns with the expected behavior of **canceled flights**, where operational data is not recorded.
+
 # Task 3: Visualizing temperatures
+
+## Objective
+
+The goal of this task is to analyze and visualize temperature data from the `nycflights13::weather` dataset. This analysis aims to provide insights into monthly temperature patterns and variations throughout the year.
 
 ```{r task3}
 # Select all variables except those between year and hour
@@ -108,9 +141,41 @@ ggplot(agg_data, aes(x = month, y = avg_temp)) +
   theme_minimal()
 ```
 
-*(Slides used: EMPR_03_Visualization1_AS2024.pdf, EMPR_07_Data_Tidying_AS2024,EMPR_05_Data_Transformation_I_AS2024, EMPR_08a_EDA_AS2024.pdf)*
+*(Slides used: EMPR_03_Visualization1_AS2024.pdf, EMPR_07_Data_Tidying_AS2024,*
+
+*EMPR_05_Data_Transformation_I_AS2024, EMPR_08a_EDA_AS2024.pdf)*
+
+## Results
+
+* **Temperature Distribution:** Histograms show temperature distributions for each month, with colder months exhibiting lower temperature clusters. 
+* **Ridge Plot:** The ridge plot illustrates the progression of temperature distributions across months, highlighting seasonal shifts.
+* **Monthly Averages:** The line plot with confidence intervals reveals lower temperatures in winter, peaking in summer, and gradual transitions between seasons.
+
+This analysis aligns with expected seasonal patterns and demonstrates the value of combining multiple visualization techniques to analyze temperature trends effectively.
 
 # Task 4: Data cleaning from `Data_HW2.xlsx`
+
+## Objective
+
+The goal is to import the dataset from the sheet **"A very small sample"** in `Data_HW2.xlsx`, inspect it for issues, clean the data, and save it as a `.rds` file for further analysis. This task ensures consistency and usability of the dataset.
+
+## Data Cleaning Issues and Solutions
+
+1. **Column Names:** Column names were inconsistent, with spaces and special characters (e.g., `date of birth`, `cash (CHF)`). This was addressed by standardizing column names to snake_case format using `clean_names()`.
+
+2. **Class and Gender:** The `class` and `gender` columns were not stored as factors. These columns were converted to factors using `factor()` for appropriate categorical handling. 
+
+3. **Date of Birth:** Dates were stored in multiple formats (e.g., `YYYY-MM-DD`, Excel serial numbers). Conditional parsing was applied to handle different date formats and convert Excel serial numbers to proper dates.
+
+4. **Height:** Height measurements were inconsistent (centimeters and meters). Numeric values were parsed, and meters were converted to centimeters for uniformity.
+
+5. **Hair Length:** The value "Glatze" (bald) was non-numeric. "Glatze" was replaced with 0, and the column was converted to numeric.
+
+6. **Eye Color:** Inconsistent eye color terms (mixed languages, separators) were addressed by standardizing terms to English, removing separators, and ensuring consistent formatting.
+
+7. **Cash (CHF):** Numerical values were ensured to be properly parsed as numeric.
+
+8. **Other Issues:** No issues were found with postcode and transport values, and no transformations were required for these columns.
 
 ```{r task4}
 # Import and cleaning the dataset
@@ -170,9 +235,24 @@ glimpse(data_clean)
 
 *(Slides used: EMPR_05_Data_Transformation_I_AS2024)*
 
+## Conclusion
+
+The cleaned data ensures usability and accuracy, addressing all inconsistencies in the original dataset. The cleaned dataset is saved as `data_clean.rds` for use in future analyses.
+
 # Task 5: Anscombe's Dataset
 
 ## Part (a): Transform the Dataset into Tidy Format
+
+### Objective
+
+The goal is to transform Anscombe's dataset into a tidy format with exactly three variables: `sample`, `x`, and `y`. The dataset will then be saved for future use.
+
+### Issues and Solution
+
+1.  **Issue**: The dataset has eight columns (`x1` to `x4`, `y1` to `y4`) instead of grouping all observations into three variables: `sample`, `x`, and `y`.
+2.  **Solution**: Use `pivot_longer()` to:
+    -   Gather all `x` and `y` values into a single column for each.
+    -   Extract the sample number from the column names and store it in a new variable `sample`.
 
 ```{r task5_part_a}
 # Transform Anscombe's dataset into tidy format
@@ -193,7 +273,16 @@ saveRDS(tidy_anscombe, file = "tidy_anscombe.rds")
 
 *(Slides used: EMPR_07_Data_Tidying_AS2024)*
 
+### Conclusion
+
+The dataset was transformed into a tidy format with three variables: `sample`, `x`, and `y`. This ensures the data is consistent, easier to analyze, and adheres to tidy data principles. The tidy dataset was saved as `tidy_anscombe.rds` for further use.
+
 ## Part (b): Scatterplot with Best Fit Lines
+
+### Objective
+
+The objective is to create a scatterplot using the tidy Anscombe dataset, distinguishing each sample by color and shape, and including best-fit lines for `y` on `x`. Shapes are restricted to specific values (12, 10, 9, and 7) for clarity. This visualization demonstrates the value of visualizing data to reveal underlying patterns not evident in summary statistics.
+
 
 ```{r task5_part_b}
 # Load the tidy dataset
@@ -216,7 +305,12 @@ ggplot(tidy_anscombe, aes(x = x, y = y, color = sample, shape = sample)) +
 
 *(Slides used: EMPR_03_Visualization1_AS2024)*
 
+
 ## Part (c): Summarize the Tidy Dataset
+
+### Objective
+
+The objective is to summarize the tidy Anscombe dataset by calculating the means, standard deviations, and correlation coefficients for `x` and `y` grouped by sample. The results are presented in a well-formatted table using `kableExtra::kable()`.
 
 ```{r task5_part_c}
 # Summarize the tidy dataset and display using kableExtra in a single pipeline
@@ -240,6 +334,11 @@ tidy_anscombe |>
 
 ## Part (d): Facet Grid Scatterplots
 
+### Objective
+
+The objective is to create a set of scatterplots for each sample in Anscombe's dataset using `facet_grid()`, distinguishing points by color and shape and including lines of best fit to show linear trends. This visualization aims to highlight the differences between the samples despite identical summary statistics.
+
+
 ```{r task5_part_d}
 # Scatterplots with facet grid per sample
 ggplot(tidy_anscombe, aes(x = x, y = y)) +
@@ -259,3 +358,30 @@ ggplot(tidy_anscombe, aes(x = x, y = y)) +
 
 *(Slides used: EMPR_03_Visualization1_AS2024)*
 
+## Conclusion
+
+The facet grid scatterplots clearly show that all four samples, despite having identical statistical properties, exhibit distinct data structures and patterns. This underscores Anscombe's message: **numerical summaries alone can be misleading, and visualizations are essential to uncover meaningful insights**.
+
+\newpage
+
+# Collaborative Effort with Phased Approach
+
+This project, exploring and visualizing a dataset, represents a collaborative effort between Mouad Medini and Lirim Zahiri. We leveraged the power of Git and GitHub ([https://github.com/lirimzahiri/EMPR_HW2](https://github.com/lirimzahiri/EMPR_HW2)) for efficient version control, code sharing, and seamless collaboration.
+
+**Phased Approach for Efficiency:**
+
+Given Mouad's prior completion of all SBD modules, we adopted a phased approach to optimize the workflow. Lirim initiated the coding process to establish a foundation, and then we both actively explored and improved the code collaboratively. This approach ensured efficient utilization of Mouad's expertise while allowing for joint learning and refinement.
+
+**Shared Responsibilities:**
+
+Throughout the project, we maintained a collaborative spirit:
+
+* **Data Cleaning:** Mouad's initial data cleaning efforts provided a solid foundation for the analysis. Lirim actively reviewed and refined the cleaning process to ensure data quality.
+* **Visualization:** Lirim took the lead in crafting informative visualizations, but Mouad provided valuable feedback and suggestions to enhance their clarity and effectiveness.
+* **Documentation:** We collaboratively drafted the documentation, ensuring it comprehensively explained the undertaken steps, the achieved results, and the insights gained from the data exploration.
+
+**Version Control with Git and GitHub:**
+
+Utilizing Git for version control allowed us to track changes, revert to previous versions if necessary, and maintain a clear history of the project's development. GitHub served as a central repository, facilitating code sharing, real-time collaboration, and efficient merging of our contributions.
+
+This collaborative approach fostered a dynamic and enriching learning experience. By working together, we were able to leverage each other's strengths, address challenges more effectively, and ultimately produce a more comprehensive and insightful data exploration project.
